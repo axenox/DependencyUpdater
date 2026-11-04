@@ -1,0 +1,88 @@
+name: Update bundled dependency
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Enabled app ID from Config/apps.json
+        required: true
+        default: exface.Core
+        type: string
+      package:
+        description: Managed inventory package
+        required: true
+        default: npm-asset/mermaid
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bundled-update-${{ inputs.app }}-${{ inputs.package }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - name: Read registered fork inventory and prepare verified files
+        env:
+          UPDATE_APP: ${{ inputs.app }}
+          UPDATE_PACKAGE: ${{ inputs.package }}
+        shell: bash
+        run: |
+          node pipeline.mjs prepare \
+            --app "$UPDATE_APP" --package "$UPDATE_PACKAGE" \
+            --workspace "$RUNNER_TEMP/generation" --output "$RUNNER_TEMP/candidate"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dependency-candidate
+          path: ${{ runner.temp }}/candidate/candidate.json
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: fork-publishing
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dependency-candidate
+          path: ${{ runner.temp }}/candidate
+      - name: Revalidate original bytes and create draft PR in configured fork
+        env:
+          UPDATE_APP: ${{ inputs.app }}
+          UPDATE_PACKAGE: ${{ inputs.package }}
+          TARGET_REPO_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
+        shell: bash
+        run: |
+          node pipeline.mjs publish \
+            --app "$UPDATE_APP" --package "$UPDATE_PACKAGE" \
+            --workspace "$RUNNER_TEMP/publication" \
+            --candidate "$RUNNER_TEMP/candidate/candidate.json" \
+            | tee "$RUNNER_TEMP/result.json"
+          {
+            echo '## Dependency update result'
+            echo '```json'
+            cat "$RUNNER_TEMP/result.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

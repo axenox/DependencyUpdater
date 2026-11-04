@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "apps": [
+    {
+      "id": "exface.Core",
+      "repository": "sergejriel/Core",
+      "baseBranch": "1.x-dev",
+      "inventory": "includes.json",
+      "vendorPath": "exface/core",
+      "enabled": true
+    }
+  ]
+}
