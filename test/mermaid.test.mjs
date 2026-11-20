@@ -49,6 +49,28 @@ test('Mermaid recipe returns normalized originals, checks, license destinations 
     }
 });
 
+test('Mermaid maps original source-map terms only to their exact pnpm identity and retains archive/map provenance', async () => {
+    const { entry, files, readPackage } = fixture();
+    const sSource = '/node_modules/.pnpm/example@1.0.0/node_modules/example/LICENSE';
+    files.set('dist/mermaid.min.js.map', Buffer.from(JSON.stringify({
+        version: 3, sources: [sSource], sourcesContent: ['original embedded terms\r\n']
+    })));
+    const result = await prepare(entry, '12.2.0', {
+        readPackage: async (...args) => {
+            const p = await readPackage(...args);
+            p.release.tarball = 'https://registry.npmjs.org/mermaid/-/mermaid-12.2.0.tgz';
+            p.release.integrity = 'sha512-fixture';
+            return p;
+        }
+    });
+    assert.equal(result.embeddedTerms.length, 1);
+    assert.equal(result.embeddedTerms[0].name, 'example');
+    assert.equal(result.embeddedTerms[0].version, '1.0.0');
+    assert.equal(result.embeddedTerms[0].terms[0].path, sSource);
+    assert.equal(result.embeddedTerms[0].terms[0].text, 'original embedded terms\r\n');
+    assert.equal(result.embeddedTerms[0].provenance.sourceMapSha256, result.evidence.sourceMapSha256);
+});
+
 test('Mermaid recipe owns runtime markers, dynamic assets and complete source-map evidence checks', async () => {
     for (const change of [
         files => files.set('dist/mermaid.min.js', Buffer.from('globalThis["other"]={version:"12.2.0"};')),

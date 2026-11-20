@@ -58,10 +58,12 @@ ElkJS 0.9.3 to 0.12.0 and js-yaml 4.3.0 to 4.3.2. These are concrete examples of
 the shared structural-change reporting used for **any** package, not Mermaid
 special cases or structural-change blockers.
 
-## Slim licensing strategy and current live trial
+## Original-text strategy (approved revision 2026-11-20)
 
-The strategy preserves main-package terms and supplied upstream notice files,
-without acquiring individual dependency archives. Inspection of the actual
+The strategy preserves main-package terms and supplied upstream notice files.
+Reuse embedded terms only when trustworthy exact identity mapping exists;
+otherwise read the integrity-checked exact embedded npm archives, not their
+dependency tree. Inspection of the actual
 12.3.0 archive found only the root `LICENSE` among license/notice files, not a
 complete standalone third-party notice collection. JS/map attribution comments
 remain intact in the original runtime/support files. Do not imply that the root
@@ -71,21 +73,41 @@ The real candidate records 65 exact embedded identities with npm declarations.
 ElkJS's `EPL-2.0` to `EPL-2.0 OR GPL-3.0-or-later` change is a prominent review
 finding, not a blocker. Khroma 2.1.0's missing npm declaration remains explicitly
 unknown and generates a warning, not a guessed MIT declaration. The former
-per-package reviewed-file override was removed along with dependency-archive
-acquisition. Prior FastDom/Khroma archive investigations are historical evidence,
-not part of the current validation algorithm or completeness claim.
+per-package reviewed-file override remains removed. There is no version/hash
+override configuration. Khroma's original MIT file can be collected while its
+registry declaration stays unknown. FastDom's original README license section
+is preserved as README evidence without inferring an SPDX declaration.
+Original LICENSE/NOTICE/copyright and relevant README files retain original
+paths, recoverable bytes and SHA-256; archive URL/integrity and manifest evidence
+remain in `bundled-packages.json`. Known declarations receive only their own
+originals in supported `licenses[].text`; unknowns retain originals in notices/
+evidence. ElkJS alternatives are not selected or legally approved.
 
-The isolated fork trial overlays the intended Core inventory on a disposable
-public fork clone, without changing the real app. Candidate generation and
-independent reconstruction succeed. Each pass reads just two main-package
-archives (12.2.0/12.3.0), never embedded-package archives. Six files change:
+The earlier slim-strategy isolated fork trial overlaid the intended Core inventory on a disposable
+public fork clone, without changing the real app. Its historical two-main-archive
+result is superseded by exact embedded original-text collection. Six files change:
 runtime, map, package.json, generated package evidence, generated upstream
-notice/declaration summary and inventory; unchanged README/LICENSE are omitted.
+original-text notices and inventory; unchanged README/LICENSE are omitted.
 The draft PR body includes the license findings, missing-declaration warning,
-unverified text coverage, removed uuid and three embedded version changes.
+original-file collection status, removed uuid and three embedded version changes.
 
 This is not license approval, installation BOM acceptance, a remote PR or
 updated Core runtime integration. Those acceptance steps remain pending.
+
+### Revised local validation, 2026-11-20
+
+The real isolated 12.2.0 -> 12.3.0 candidate and independent reconstruction passed
+with 65 exact embedded identities and 81 collected original files, none missing.
+Each pass verified 67 archives (two main, 65 embedded), using the existing
+integrity-checked archive cache and fresh registry metadata. No runtime was
+replaced and no remote action occurred. Six declared candidate files change.
+Khroma's original LICENSE and FastDom's original README terms are now retained,
+not metadata-only placeholders; Khroma stays unknown and FastDom README-only
+evidence still requires review. ElkJS's changed alternatives remain prominent.
+Actual PackageManager full JSON export preserved all 64 named package-specific
+texts and the one unknown declaration; Markdown serialization was exercised too.
+This focused serialization check is not installation-wide BOM/enrichment or
+legal acceptance. The external offline updater suite passed all 66 tests.
 
 ## Local test page and acceptance boundary
 

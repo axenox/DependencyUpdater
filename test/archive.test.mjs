@@ -112,14 +112,16 @@ test('preserve complete published terms and notices, not just SPDX identifiers',
     assert.equal(aTerms[1].text, 'original attribution');
 });
 
-test('complete original README license sections are preserved; incomplete sections fail', () => {
+test('relevant original README sections are preserved without inferring their declaration or completeness', () => {
     const sReadme = '# Package\n\n## License\n\n(The MIT License)\n'
         + 'Copyright (c) Original author\nPermission is hereby granted, free of charge\n'
         + 'THE SOFTWARE IS PROVIDED "AS IS"\nOriginal warranty and attribution remain here.\n';
     const aTerms = originalTerms(new Map([['README.md', Buffer.from(sReadme)]]));
     assert.equal(aTerms[0].path, 'README.md');
     assert.equal(aTerms[0].text, sReadme);
-    assert.throws(() => originalTerms(new Map([['README.md', Buffer.from('## License\nMIT')]])), /no original/);
+    assert.equal(originalTerms(new Map([['README.md', Buffer.from('## License\nMIT')]]))[0].text, '## License\nMIT');
+    assert.deepEqual(originalTerms(new Map(), { required: false }), []);
+    assert.throws(() => originalTerms(new Map([['LICENSE', Buffer.alloc(0)]]), { required: false }), /empty/);
 });
 
 test('preserve aggregated upstream licenses and bundler sidecars, not unrelated files containing legal in their name', () => {

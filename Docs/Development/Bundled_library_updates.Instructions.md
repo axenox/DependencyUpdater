@@ -119,15 +119,23 @@ that upstream code is trustworthy or reproducible forever.
 
 ## Licensing and PackageManager acceptance
 
-Use the shared slim strategy in `src/licenses.mjs`: validate main-package
+Use the shared original-text strategy in `src/licenses.mjs`: validate main-package
 registry/manifest/license consistency and preserve supplied original upstream
 LICENSE/NOTICE/copyright files, including bundler sidecars. Prefer provided
-upstream attribution over downloading every dependency archive. Record exact
-embedded identities and npm declarations without recursively scanning dependencies.
+upstream attribution only when its original terms map reliably to an exact embedded
+identity. Otherwise download integrity-checked exact embedded npm archives, not
+the whole dependency tree. Preserve original LICENSE/NOTICE/copyright and relevant
+README terms, original bytes/hashes/paths, source URL and integrity durably in the
+declared notices/evidence. Populate supported package-specific inline texts for
+known declarations, never a shared multi-package file as every package's license.
+Record exact embedded identities and npm declarations without recursively scanning dependencies.
 Never assign the main license or generic texts to embedded packages, or infer
 completeness from a notice filename. Missing embedded declarations/text coverage
 and changed licenses are prominent draft-PR findings, not approvals or candidate
-blockers. Contradictory main evidence and missing main terms remain errors.
+blockers. Contradictory embedded registry/manifest declarations are explicit review
+findings. Network/integrity/identity failures propagate, never masquerade as absent
+originals. Unknown declarations remain unknown even if original terms exist.
+Contradictory main evidence and missing main terms remain errors.
 Do not report browser/build-tool dependencies as shipped runtime code.
 
 The final inventory consumer is PackageManager's `GenerateLicenseBOM`, not just

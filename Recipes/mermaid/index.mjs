@@ -23,7 +23,21 @@ export async function prepare(oEntry, sVersion, { readPackage: fnReadPackage }) 
         throw new Error('Unsupported runtime identity or dynamically loaded asset in Mermaid bundle.');
     }
     const oMapBytes = member(oFiles, 'dist/mermaid.min.js.map');
-    const aEmbedded = embeddedPackages(JSON.parse(oMapBytes));
+    const oMap = JSON.parse(oMapBytes);
+    const aEmbedded = embeddedPackages(oMap);
+    const aEmbeddedTerms = aEmbedded.flatMap(oEmbedded => {
+        const oSources = new Map(oEmbedded.sources.map(sPath => [
+            sPath, Buffer.from(oMap.sourcesContent[oMap.sources.indexOf(sPath)])
+        ]));
+        const aTerms = originalTerms(oSources, { required: false });
+        return aTerms.length ? [{
+            name: oEmbedded.name, version: oEmbedded.version, terms: aTerms,
+            provenance: {
+                tarball: oPackage.release.tarball, integrity: oPackage.release.integrity,
+                sourceMapPath: 'dist/mermaid.min.js.map', sourceMapSha256: sha256(oMapBytes)
+            }
+        }] : [];
+    });
     if (!aEmbedded.length) {
         throw new Error('Mermaid source map contains no embedded-package evidence.');
     }
@@ -45,6 +59,7 @@ export async function prepare(oEntry, sVersion, { readPackage: fnReadPackage }) 
         license: oPackage.release.license,
         licenses: [{ name: oPackage.release.license, file: oMapped.get('LICENSE') }],
         embedded: aEmbedded,
+        embeddedTerms: aEmbeddedTerms,
         embeddedDescription: 'exact source-map version',
         terms: originalTerms(oFiles),
         outputs: aOutputs,

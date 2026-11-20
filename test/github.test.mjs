@@ -19,8 +19,8 @@ function fixture() {
         files: [{ path: 'includes.json', size: 2, sha256: 'hash', content: 'W10=' }],
         embedded: [{ name: 'example', version: '1.2.3', license: 'MIT' }],
         licenseReview: {
-            strategy: 'upstream-notices', status: 'required', embeddedLicenseTexts: 'not-verified',
-            changes: [], warnings: [{ code: 'embedded-license-coverage-unverified', message: 'Completeness requires manual review.' }],
+            strategy: 'exact-embedded-originals', status: 'required', embeddedLicenseTexts: 'original-files-collected',
+            changes: [], warnings: [{ code: 'original-terms-require-review', message: 'Completeness requires manual review.' }],
             upstreamTerms: [{ path: 'LICENSE', sha256: 'original-license-hash', text: 'original upstream license' }]
         },
         dependencyChanges: { added: [], removed: [{ name: 'uuid', version: '14.0.0' }], changed: [] },
@@ -63,7 +63,9 @@ test('PR bodies report factual checks, all hashes and generic manual review only
     assert.match(sBody, /example@1.2.3/);
     assert.match(sBody, /Removed: uuid@14.0.0/);
     assert.match(sBody, /License review required/);
-    assert.match(sBody, /not-verified/);
+    assert.match(sBody, /original-files-collected/);
+    assert.match(sBody, /exact embedded npm archives only/);
+    assert.match(sBody, /never the full dependency tree/);
 });
 
 test('changed or missing license declarations are highlighted, never described as approved', () => {

@@ -147,16 +147,19 @@ continues in phase 4; download success alone is not a successful candidate.
 1. Inspect the installed PackageManager contract and Core bundling requirements
    before selecting the serialized license fields.
 2. Verify main-package original terms/metadata and preserve supplied upstream
-   license/notice/copyright files, preferring provided attribution over individual
-   dependency archives. Read exact-version npm declarations only for actual
-   embedded identities, not the full dependency tree. Explicitly record missing
-   declarations and unverified original-text coverage; never assign main/generic
-   texts to embedded packages. Distinguish embedded code from browser/tooling.
+   license/notice/copyright and relevant README files. Prefer upstream originals
+   only with trustworthy exact embedded identity mapping; otherwise obtain
+   integrity-checked exact embedded npm archives, never their dependency tree.
+   Persist original texts/bytes, paths/hashes and source URL/archive integrity in
+   declared evidence/notices. Use supported package-specific inline text fields
+   for known declarations; keep unknowns without inventing a declaration.
+   Never assign main/generic texts. Distinguish embedded code from browser/tooling.
 3. Generate proposed inventory changes for the owning app. Preserve unrelated
    entries and separately installed versions; detect license changes explicitly.
    Changed/missing declarations and coverage gaps become prominent draft-PR
-   findings, not blockers or approvals. Contradictory main evidence/missing main
-   terms still fail.
+   findings, not blockers or approvals. Embedded registry/manifest contradictions
+   also remain explicit findings. Network/integrity/identity errors must propagate,
+   not become absence warnings. Contradictory main evidence/missing main terms fail.
 4. Validate the exact candidate file set, nonempty expected files, versions,
    hashes, licensing and configured adapter checks. Test the actual downloaded
    bytes, including required loading/API/registration checks where applicable.
@@ -169,8 +172,15 @@ continues in phase 4; download success alone is not a successful candidate.
    and unverified text coverage explicit. Resolve attribution/legal acceptance
    before merge without unrelated PackageManager repairs.
 
-**Completion:** fixtures cover missing main terms, preserved upstream notices,
-changed/missing embedded declarations as review findings,
+**Local implementation revised 2026-11-20:** exact-archive fallback, original-byte
+provenance, PackageManager inline text serialization and deterministic
+reconstruction are implemented. Original files collected is not full legal
+completeness. Installation-wide BOM and remote rollout acceptance remain pending.
+
+**Completion:** fixtures cover missing main terms, mapped upstream evidence reuse,
+exact-version fallback, original LICENSE/NOTICE/README bytes/provenance,
+coexisting versions, changed/missing/contradictory embedded declarations,
+missing originals as review findings, propagated network/integrity errors,
 wrong versions, extra/missing outputs and metadata inconsistencies. Real BOM
 acceptance evidence exists for the first candidate; standard BOM outputs and
 other installed versions remain untouched. Unperformed checks stay `not-run`.

@@ -145,13 +145,21 @@ CLI merely because it existed in the prototype.
 
 ## Licensing, acceptance and reviewer responsibility
 
-The slim strategy validates the main package's declaration against its original
-archive, preserves supplied upstream license/notice files, and reports exact
-embedded identities with npm declarations. It does not download all dependency
-archives or traverse the full npm tree. Supplied aggregate notices are preferred;
-their completeness is a review responsibility, not inferred from a filename.
-If individual embedded terms/declarations are missing, record explicit review
-warnings and never substitute the main MIT text or a generic SPDX text.
+The approved original-text strategy validates the main package's declaration
+against its original archive and preserves supplied license/notice files.
+Recipes identify actual exact embedded packages and any trustworthy original-term
+mapping (Mermaid: exact pnpm source-map paths). Shared license collection reuses
+that evidence first; an unmapped aggregate or main LICENSE cannot supply another
+package's terms. Otherwise read the exact embedded npm archive with SHA-512
+verification, without installing/executing it or traversing its dependency tree.
+Preserve license, notice, copyright and relevant README originals; retain exact
+bytes/base64, paths and SHA-256 plus source URL/integrity in evidence.
+PackageManager's supported `licenses[].text` receives only that exact package's
+originals when a declaration exists. Unknown registry declarations remain unknown,
+with originals in the declared notices/evidence, never a guessed MIT/SPDX label.
+Genuine missing originals/declarations and embedded manifest contradictions
+produce draft-review warnings; network/integrity/identity failures stop explicitly.
+Collected originals are not a legal-completeness or compatibility determination.
 Changed declarations are highlighted in draft PRs, without deciding legal
 compatibility or approving alternatives. Contradictory main-package evidence and
 missing required main terms still fail.

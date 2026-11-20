@@ -42,7 +42,18 @@ async function setup(t) {
         }]))
     };
     const fnReadPackage = async (sName, sVersion) => {
-        assert.equal(sName, 'mermaid', 'Embedded package archives must not be downloaded.');
+        if (sName !== 'mermaid') {
+            const oManifest = { name: sName, version: sVersion, license: oEmbeddedMetadata.versions[sVersion].license };
+            return {
+                release: releaseInfo(oEmbeddedMetadata, sName, sVersion, { allowMissingLicense: true }),
+                manifest: oManifest,
+                files: new Map([
+                    ['package.json', Buffer.from(JSON.stringify(oManifest))],
+                    ['LICENSE', Buffer.from(`original ${sName}@${sVersion} terms\r\n`)],
+                    ['NOTICE', Buffer.from(`original ${sName}@${sVersion} attribution`)]
+                ])
+            };
+        }
         const oManifest = { name: sName, version: sVersion, license: 'MIT' };
         return {
             release: releaseInfo(oMetadata, sName, sVersion),
@@ -76,7 +87,7 @@ async function setup(t) {
     };
 }
 
-test('candidate retains upstream originals and exact metadata declarations without dependency archives or source writes', async t => {
+test('candidate retains exact embedded originals in notices, provenance and BOM text without source writes', async t => {
     const oOptions = await setup(t);
     const sBefore = await readFile(path.join(oOptions.root, 'includes.json'), 'utf8');
     const oCandidate = await createCandidate(oOptions);
@@ -88,12 +99,17 @@ test('candidate retains upstream originals and exact metadata declarations witho
     assert.equal(aInventory[0].version, '12.3.0');
     assert.deepEqual(aInventory[1], { name: 'unrelated', version: '5' });
     assert.equal(aInventory[2].name, 'npm-asset/example');
-    assert.deepEqual(aInventory[2].licenses, [{ name: 'MIT' }]);
+    assert.equal(aInventory[2].licenses[0].name, 'MIT');
+    assert.match(aInventory[2].licenses[0].text, /original example@1.0.0 terms\r\n/);
+    assert.doesNotMatch(aInventory[2].licenses[0].text, /original mermaid license/);
     assert.equal(oCandidate.licenseReview.status, 'required');
-    assert.equal(oCandidate.checks.embeddedLicenseTexts, 'not-verified');
+    assert.equal(oCandidate.checks.embeddedLicenseTexts, 'original-files-collected');
     const oNotices = oCandidate.files.find(oFile => oFile.path === 'assets/THIRD_PARTY_LICENSES.txt');
     assert.match(Buffer.from(oNotices.content, 'base64').toString(), /original mermaid license/);
-    assert.match(Buffer.from(oNotices.content, 'base64').toString(), /NOT PACKAGE-SPECIFIC LICENSE TEXTS/);
+    assert.match(Buffer.from(oNotices.content, 'base64').toString(), /original example@1.0.0 attribution/);
+    const oEvidence = JSON.parse(Buffer.from(oCandidate.files.find(oFile => oFile.path === 'assets/bundled-packages.json').content, 'base64'));
+    assert.match(oEvidence.packages[0].termProvenance.tarball, /example-1.0.0.tgz$/);
+    assert.equal(Buffer.from(oEvidence.packages[0].terms[0].bytesBase64, 'base64').toString(), 'original example@1.0.0 terms\r\n');
     assert.equal(await readFile(path.join(oOptions.root, 'includes.json'), 'utf8'), sBefore);
     assert.deepEqual(await verifyCandidate(oCandidate, oOptions), oCandidate);
     const oTampered = structuredClone(oCandidate);
@@ -213,7 +229,7 @@ test('contradictory installed inventory licenses remain errors rather than revie
     await assert.rejects(createCandidate(oOptions), /Installed inventory license must match/);
 });
 
-test('upstream third-party notice files are preserved without downloading the embedded packages', async t => {
+test('unmapped aggregate notices are preserved but never assigned generically to embedded packages', async t => {
     const oOptions = await setup(t);
     const oCandidate = await createCandidate({
         ...oOptions,

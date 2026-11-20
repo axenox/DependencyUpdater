@@ -12,7 +12,7 @@ workflow**, starting with Mermaid in the configured fork `sergejriel/Core`.
 update definitions. This is not a runtime dependency of Core or UI5Facade.
 
 Remote workflow/publication acceptance is pending. The isolated real 12.2.0 to
-12.3.0 candidate now succeeds with the slim upstream-notice strategy. License
+12.3.0 candidate uses the approved exact-embedded-originals strategy. License
 changes, missing embedded declarations and unverified attribution coverage are
 prominent draft-PR findings, not automatic approvals. Dependency structure
 changes are reported generically, not blocked by themselves.
@@ -55,8 +55,12 @@ Plans do not change files or install/execute upstream packages.
 4. Manually run **Update bundled dependency** on the updater default branch,
    with app `exface.Core` and package `npm-asset/mermaid`.
 5. Review reported license changes, unknown declarations and attribution coverage
-   before merge. The workflow preserves supplied original upstream notices; it
-   does not download all dependency archives or approve licensing automatically.
+   before merge. The workflow reuses reliably mapped upstream originals first,
+   otherwise downloads integrity-checked exact embedded npm archives only, not
+   the full dependency tree. Original texts/provenance are saved in declared
+   notices/evidence and supported package-specific inventory text fields.
+   Unknown declarations remain unknown; original files collected is not legal
+   completeness or automatic approval.
 
 The generation job has no target-write token. The separate publisher recreates
 the candidate before using GitHub's API. Commit author is `github-actions[bot]`;

@@ -1,6 +1,6 @@
 # Development status and retained evidence
 
-Status baseline: 2026-11-04. This document records implementation state and
+Status baseline: 2026-11-20. This document records implementation state and
 historical findings, not the desired architecture or an executable CLI contract.
 
 ## Documentation map
@@ -18,6 +18,35 @@ historical findings, not the desired architecture or an executable CLI contract.
 
 ## Current implementation state
 
+- **2026-11-20 approved original-text revision:** shared collection first reuses
+  trustworthy exact recipe-mapped upstream terms, otherwise reads integrity-checked
+  exact embedded npm archives only. No recursive dependency traversal, package
+  execution, generic license replacement or restored override configuration.
+  Original LICENSE/NOTICE/copyright/relevant README bytes (base64), text, paths
+  and SHA-256 plus archive URL/integrity/manifest evidence are durable in the
+  declared notices/evidence. Known declarations receive package-specific inline
+  originals through PackageManager's verified `licenses[].text` contract.
+  Unknown registry declarations remain unknown, with original evidence retained.
+  Missing originals/declarations, README-only evidence and embedded declaration
+  contradictions remain draft-review findings. Network/integrity/identity errors
+  fail explicitly. Main validation and previous-original-byte guards are unchanged.
+  `original-files-collected` does not mean legal completeness or approval.
+- **2026-11-20 validation:** all **66 tests passed**, 0 failed/skipped, in the
+  external Node.js 24.21.0 workspace (`npm test`, 82.274 s). The isolated real
+  Mermaid 12.2.0 -> 12.3.0 candidate was generated and independently reconstructed:
+  **65 exact embedded identities, 81 original files, no missing original files**.
+  Each pass verified two main plus 65 embedded archives (134 total archive reads
+  across both passes), all from the existing cache, with fresh registry metadata.
+  Six declared files change; no live app file or remote state was changed.
+  ElkJS's EPL-2.0 -> EPL-2.0 OR GPL-3.0-or-later change remains prominent;
+  Khroma 2.1.0 remains undeclared despite its original MIT file; FastDom 1.0.12's
+  original README terms produce a README-only review finding.
+  Actual current PackageManager (`314a75d`) full JSON serialization retained
+  **64 package-specific inline texts**, all exact versions and the one unknown
+  declaration; its Markdown exporter was also exercised in isolated destinations.
+  This is focused consumer serialization, not a full installation
+  `GenerateLicenseBOM`/enrichment acceptance run. The IDE build succeeded with
+  limited build diagnostics; Node tests are the authoritative executable gate.
 - Mermaid in Core is the first implementation path; ECharts is deferred.
   Other apps remain deferred until the Core workflow is accepted.
 - **2026-11-04 recipe separation:** Mermaid-specific filenames, runtime/map
@@ -29,19 +58,20 @@ historical findings, not the desired architecture or an executable CLI contract.
   All ten `src` modules now start with a responsibility/boundary comment.
   Configuration explains previous-release byte equality versus in-run race
   checks, including README/line-ending changes and the generated-build limitation.
-- The post-refactor external Node.js 24 suite has **58 passing tests**. New
+- The historical post-refactor external Node.js 24 suite had **58 passing tests**. New
   coverage includes recipe selection, forbidden executable paths, wrong actual
   versions, missing/empty/undeclared outputs, failed/reserved checks, a generated
   non-Mermaid result without a source map, and recipe-local runtime/baseline rules.
   Existing candidate, license-review, race and mocked publication tests still pass.
   The real isolated 12.2.0 -> 12.3.0 candidate was regenerated and independently
   reconstructed through the dispatcher after refactoring: 65 embedded identities,
-  six changed files and two main archives per pass, with no dependency archives.
+  six changed files and two main archives per pass, with no dependency archives
+  under the now-superseded slim strategy.
   The map hash now lives under `artifactEvidence.sourceMapSha256`; source runtime
   files, the target inventory definition and remote GitHub state remain unchanged.
 - Local source now includes the Node.js 24 planner, strict central configuration,
   public npm archive integrity/bounds checks, original Mermaid distribution
-  validation, source-map embedded identities, slim upstream-notice licensing,
+  validation, source-map embedded identities, exact embedded original licensing,
   candidate generation/reconstruction and GitHub Git Data API draft publication.
   Exact tooling dependencies are `semver`, `acorn` and `tar-stream`.
 - The sole enabled registration targets **`sergejriel/Core`, `1.x-dev`**, with
@@ -69,25 +99,20 @@ historical findings, not the desired architecture or an executable CLI contract.
   before using `TARGET_REPO_TOKEN`. The initial auth implementation is a scoped
   fine-grained PAT, not a GitHub App. Required reviewers/default-branch environment
   restrictions are recommended.
-- Slim licensing preserves original main/upstream notice files and reads npm
-  declarations only for actual embedded versions. No dependency archives or full
-  recursive dependency tree are acquired; the former exceptional-file config is
-  removed. Changed declarations, unknown declarations and unverified embedded
-  text coverage are explicit draft-review findings, not candidate blockers or
-  automatic approval. No main MIT/generic texts are assigned to embedded code.
-- **2026-11-04 local evidence:** all 50 deterministic updater tests pass in the
+- **Historical 2026-11-04 slim-strategy evidence (superseded):** all 50 deterministic updater tests passed in the
   external Node.js 24 workspace. This includes notice-sidecar matching without
   treating unrelated filenames containing `legal` as license files, structural
   removal of coexisting versions, main/embedded license-change findings, unknown
   embedded declarations and an assertion forbidding dependency archive reads.
-- Real external-workspace inspection verified Mermaid 12.3.0 and 65 exact embedded
+- Historical external-workspace inspection verified Mermaid 12.3.0 and 65 exact embedded
   versions (previously 66). An isolated fork clone with the intended inventory
   overlaid generated the six-file candidate and independently reconstructed it;
   each pass acquired only two main archives (12.2.0/12.3.0).
   ElkJS's `EPL-2.0` to `EPL-2.0 OR GPL-3.0-or-later` change and Khroma's missing
   declaration appear explicitly in the draft text. The actual upstream archive
   supplies only the root LICENSE, not a complete third-party notice collection;
-  `embeddedLicenseTexts` remains `not-verified`, and approval remains manual.
+  `embeddedLicenseTexts` was `not-verified`; the revised strategy now collects
+  exact-package originals and still requires manual approval.
   See [Mermaid](Mermaid.md) for the exact acceptance boundary.
 - No remote workflow dispatch, authenticated PR publication, credential/environment
   provisioning, installation BOM acceptance or updated Core runtime integration

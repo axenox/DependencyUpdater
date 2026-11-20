@@ -41,7 +41,7 @@ export function pullBody(oCandidate) {
         `Registry integrity: \`${oUpdate.candidate.integrity}\``,
         '',
         '### License review required — no automatic approval',
-        'Strategy: preserve original upstream license/notice files; do not download all dependency archives.',
+        'Strategy: reuse exactly mapped upstream originals; otherwise verify exact embedded npm archives only, never the full dependency tree.',
         `Embedded license-text coverage: **${oCandidate.licenseReview.embeddedLicenseTexts}**.`,
         ...oCandidate.licenseReview.changes.map(oChange =>
             `- **License changed:** ${oChange.name} (${oChange.previousVersion} → ${oChange.version}): `
@@ -75,7 +75,7 @@ export function pullBody(oCandidate) {
             ? ['No embedded package identity/version changes.'] : []),
         '',
         'Supplied upstream license/notice texts and exact source-map identities are retained in the evidence files.',
-        'Embedded inventory licenses are npm declarations, not proof of complete original attribution or legal compatibility.',
+        'Embedded inventory licenses retain npm declarations and package-specific original texts when declared; unknown declarations retain originals in the notices/evidence, not a guessed license.',
         'License approval and full installation BOM acceptance remain the reviewer’s responsibility; this is a draft PR.',
         '',
         'Integration and functionality in PowerUI have not been automatically verified.',

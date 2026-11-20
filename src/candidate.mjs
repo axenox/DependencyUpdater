@@ -11,7 +11,7 @@ import { planUpdates, checkoutIdentity } from './planner.mjs';
 import { packageReader, compareEmbedded, sha256 } from './distribution.mjs';
 import { resolveRecipe, validateRecipeResult } from './recipes.mjs';
 import { fetchMetadata } from './npm.mjs';
-import { inspectLicenses, noticeText } from './licenses.mjs';
+import { inspectLicenses, noticeText, inventoryLicenses } from './licenses.mjs';
 
 /** Serialize evidence deterministically; preserve original artifact/license bytes separately. */
 function jsonBytes(oValue) {
@@ -57,12 +57,12 @@ export async function createCandidate({
         readInstalled: async sPath => readFile(await resolveFile(sRoot, sPath))
     });
     const oDependencyChanges = compareEmbedded(oPrevious.embedded, oNext.embedded);
-    const { packages: aPackages, review: oLicenseReview } = await inspectLicenses(oPrevious, oNext, fnMetadata);
+    const { packages: aPackages, review: oLicenseReview } = await inspectLicenses(oPrevious, oNext, fnMetadata, fnReadOriginal);
     const aInventoryEntries = aPackages.map(oPackage => ({
         name: `npm-asset/${oPackage.name}`,
         version: oPackage.version,
-        description: `Embedded in ${sPackageName}; ${oNext.embeddedDescription}; npm license declaration only, original text coverage requires review`,
-        licenses: oPackage.license === null ? [] : [{ name: oPackage.license }]
+        description: `Embedded in ${sPackageName}; ${oNext.embeddedDescription}; original terms in ${oEntry.update.artifacts.evidence.notices}; manual license review required`,
+        licenses: inventoryLicenses(oPackage)
     }));
     const oEvidence = oEntry.update.artifacts.evidence;
     const oOldEvidenceFingerprint = oPlan.baseline.find(oFile => oFile.path === oEvidence.packages);
@@ -140,7 +140,7 @@ export async function createCandidate({
         checks: {
             ...oNext.checks,
             upstreamLicenseFiles: 'passed',
-            embeddedLicenseTexts: 'not-verified',
+            embeddedLicenseTexts: oLicenseReview.embeddedLicenseTexts,
             licenseApproval: 'manual-review-required',
             embeddedDowngrades: 'passed',
             powerUiIntegration: 'not-run',

@@ -50,28 +50,28 @@ export function embeddedPackages(oMap) {
         `${oLeft.name}@${oLeft.version}`.localeCompare(`${oRight.name}@${oRight.version}`, 'en'));
 }
 
-/** Preserve every license/notice/copyright file published in a package, including nested notices. */
-export function originalTerms(oFiles) {
+/** Preserve supplied terms and relevant README files without inferring their license or legal completeness. */
+export function originalTerms(oFiles, { required = true } = {}) {
     const aTerms = [...oFiles].filter(([sName]) =>
         /^(?:licen[cs]e(?:s)?|copying|copyright(?:notice)?|notice(?:s)?|(?:third|3rd)[-_]?party[-_]?(?:licen[cs]es?|notices?))(?:[._-].*)?$/i.test(sName.split('/').at(-1))
         || /\.(?:licen[cs]es?|notices?|legal)(?:\.(?:txt|md|text))?$/i.test(sName.split('/').at(-1)));
-    if (!aTerms.length) {
-        const oReadme = oFiles.get('README.md');
-        const sReadme = oReadme?.toString('utf8') ?? '';
-        if (/\n#{1,6}\s+Licen[cs]e\s*\r?\n/i.test(sReadme)
-            && /Copyright \(c\)/i.test(sReadme)
-            && sReadme.includes('Permission is hereby granted, free of charge')
-            && /THE SOFTWARE IS PROVIDED ['"]AS IS['"]/.test(sReadme)) {
-            aTerms.push(['README.md', oReadme]);
-        } else {
-            throw new Error('Package has no original license/notice files or complete recognized README license section.');
+    for (const [sPath, oBytes] of oFiles) {
+        if (/^readme(?:[._-].*)?$/i.test(sPath.split('/').at(-1))
+            && /(?:^|\n)#{1,6}\s+(?:licen[cs]e|copyright|legal|terms)(?:\s|$)/i.test(oBytes.toString('utf8'))) {
+            aTerms.push([sPath, oBytes]);
         }
+    }
+    if (!aTerms.length && required) {
+        throw new Error('Package has no original license/notice files or relevant README terms.');
     }
     if (aTerms.some(([, oBytes]) => !oBytes.length)) {
         throw new Error('Package contains an empty license/notice file.');
     }
     return aTerms.sort(([sLeft], [sRight]) => sLeft.localeCompare(sRight, 'en'))
-        .map(([sPath, oBytes]) => ({ path: sPath, sha256: sha256(oBytes), text: oBytes.toString('utf8') }));
+        .map(([sPath, oBytes]) => ({
+            path: sPath, sha256: sha256(oBytes), text: oBytes.toString('utf8'),
+            bytesBase64: oBytes.toString('base64')
+        }));
 }
 
 /** Report structural changes; reject newly introduced versions below a package's previous minimum. */
@@ -96,22 +96,23 @@ export function compareEmbedded(aPrevious, aNext) {
     };
 }
 
-/** Obtain original registry packages; lifecycle scripts and package code are never executed. */
+/** Verify exact original archives; embedded declaration conflicts are reviewable, main validation stays strict. */
 export function packageReader({ metadataReader = fetchMetadata, downloader = download } = {}) {
     const oCache = new Map();
     const oMetadataCache = new Map();
-    return async (sName, sVersion) => {
-        const sKey = `${sName}@${sVersion}`;
+    return async (sName, sVersion, { embedded = false } = {}) => {
+        const sKey = `${sName}@${sVersion}:${embedded ? 'embedded' : 'main'}`;
         if (!oCache.has(sKey)) {
             oCache.set(sKey, (async () => {
                 if (!oMetadataCache.has(sName)) {
                     oMetadataCache.set(sName, metadataReader(sName));
                 }
                 const { metadata: oMetadata } = await oMetadataCache.get(sName);
-                const oRelease = releaseInfo(oMetadata, sName, sVersion);
+                const oRelease = releaseInfo(oMetadata, sName, sVersion, { allowMissingLicense: embedded });
                 const oFiles = await readArchive(await downloader(oRelease.tarball), oRelease.integrity);
                 const oManifest = JSON.parse(member(oFiles, 'package.json'));
-                if (oManifest.name !== sName || oManifest.version !== sVersion || oManifest.license !== oRelease.license) {
+                if (oManifest.name !== sName || oManifest.version !== sVersion
+                    || (!embedded && oManifest.license !== oRelease.license)) {
                     throw new Error(`Archive manifest differs from registry: ${sKey}`);
                 }
                 return { release: oRelease, files: oFiles, manifest: oManifest };

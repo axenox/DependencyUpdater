@@ -198,22 +198,44 @@ coexisting version alone is a structural change, not a downgrade. Modified
 installed originals, incomplete artifact evidence, contradictory main-package
 licensing and missing required main terms remain explicit errors.
 
-The slim license strategy preserves the main package's original terms and all
-supplied upstream notice files, including `bundle.js.LICENSE.txt` sidecars.
-It reads exact-version npm license declarations for actual embedded identities,
-without downloading dependency archives or traversing their dependency trees.
-`licenseReview` records the upstream terms, changed declarations and explicit
-missing-declaration/coverage warnings. Changed main licenses update the proposed
-inventory and original files together, without approving the change.
+The approved `exact-embedded-originals` strategy preserves main terms and supplied
+notices, including sidecars. It first reuses original terms reliably mapped by the
+trusted recipe to exact embedded identities. Mermaid maps only exact pnpm
+source-map paths; an arbitrary aggregate notice/root MIT file is not a mapping.
+For other identities shared code obtains only that exact embedded npm archive,
+verifies SHA-512 and manifest identity, and collects original license/notice/
+copyright plus relevant README files. It never follows their dependency trees,
+executes scripts/JS, substitutes generic texts or infers declarations from terms.
+HTTP/timeout/integrity/archive/identity errors stop; actual absence of original
+terms or declarations and embedded registry/manifest contradictions are explicit
+draft-review findings. Main validation and installed-original-byte guards stay strict.
 
-Embedded inventory `licenses` contain npm-declared names only, or an empty list
-for an unknown declaration; no invented text/link or main-package license is
-substituted. `THIRD_PARTY_LICENSES.txt` groups original supplied upstream files
-and clearly separated metadata declarations. Neither its name nor
-`upstreamLicenseFiles: passed` implies complete attribution coverage.
-`embeddedLicenseTexts: not-verified` and `licenseApproval: manual-review-required`
-remain explicit. Review completeness before merge, including when upstream
-does not supply separate third-party notices. There is no license auto-approval.
+`bundled-packages.json` retains each package's `terms` (original path, SHA-256,
+UTF-8 display text and recoverable original `bytesBase64`), `termProvenance`
+(archive URL, SHA-512 integrity and manifest hash/path, or exact upstream map
+evidence), registry declaration/URL, original manifest declaration and whether
+that manifest was checked. `THIRD_PARTY_LICENSES.txt` contains the package-specific
+original texts with identities/provenance/hashes and warnings, not just SPDX names.
+
+Current PackageManager at `314a75d` was inspected: `BOMPackageLicense` imports
+`text`, preserves it through `toBOM()`, and full `JsonBOM` exports license objects
+with their text (`minimal` intentionally omits it). Therefore known embedded
+declarations use `licenses: [{"name":"<registry declaration>","text":"<only this
+exact package's original files>"}]`. No aggregate notice file is assigned as
+every package's license. Unknown declarations keep `licenses: []` and their
+originals in the declared notices/evidence; without a real declared name the
+current consumer cannot expose those as a named license. This is visible review
+work, not a reason to invent one. Expressions/alternatives are not selected.
+The isolated real-candidate serialization check retained 64 named package texts,
+65 exact package identities and Khroma's unknown declaration in full JSON;
+Markdown export also ran. This does not claim installation-wide enrichment or
+complete legal attribution acceptance.
+
+`licenseReview.status: required` and `licenseApproval: manual-review-required`
+always remain. `embeddedLicenseTexts` is `original-files-collected` or
+`missing-original-files`, describing collection, **not legal completeness**.
+Review the original files and README-only warnings before merge. A filename,
+successful archive check or original-file count never means legal approval.
 
 ## GitHub setup and manual invocation
 
@@ -261,5 +283,5 @@ Inspect such state before cleanup/retry; no success is reported on failure.
 When the base or selected version advances between jobs, regenerate a candidate.
 
 The isolated real Mermaid candidate now succeeds and reports ElkJS's changed
-license declaration plus Khroma's missing declaration and unverified embedded
-text coverage. No remote workflow was dispatched. See [Mermaid findings](Mermaid.md).
+license declaration plus Khroma's missing declaration. Original-text collection
+is separate from legal review. No remote workflow was dispatched. See [Mermaid findings](Mermaid.md).
