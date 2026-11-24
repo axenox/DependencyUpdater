@@ -91,7 +91,7 @@ test('candidate retains exact embedded originals in notices, provenance and BOM 
     const oOptions = await setup(t);
     const sBefore = await readFile(path.join(oOptions.root, 'includes.json'), 'utf8');
     const oCandidate = await createCandidate(oOptions);
-    assert.equal(oCandidate.kind, 'npm-candidate');
+    assert.equal(oCandidate.kind, 'dependency-candidate');
     assert.equal(oCandidate.checks.powerUiIntegration, 'not-run');
     assert.equal(oCandidate.checks.installationLicenseBom, 'not-run');
     const oInventoryFile = oCandidate.files.find(oFile => oFile.path === 'includes.json');

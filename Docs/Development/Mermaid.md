@@ -1,5 +1,10 @@
 # Mermaid: first npm distribution workflow
 
+**Current scope:** Core has removed this inventory entry. The recipe remains
+registered for future consumers; do not restore Mermaid to Core.
+The following inventory observations and real candidate results are historical
+evidence. The active manual trial is [PHP_XLSXWriter](PHP_XLSXWriter.md).
+
 Baseline: 2026-11-03. The first implementation targets `npm-asset/mermaid` in
 Core, upstream npm package `mermaid`. ECharts follows later.
 See [configuration](Configuration.md), [requirements](../Requirements/Requirements.md)

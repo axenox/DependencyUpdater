@@ -9,7 +9,8 @@ import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { selectApps, validateInventory } from './config.mjs';
 import { fingerprint, readJson, resolveFile } from './paths.mjs';
-import { fetchMetadata, releaseInfo, selectVersion, dependencyChanges } from './npm.mjs';
+import { dependencyChanges } from './npm.mjs';
+import { fetchMetadata, provider } from './providers.mjs';
 
 /** Read local Git identity without fetching, checking out, staging or executing target scripts. */
 function git(root, ...args) {
@@ -63,19 +64,21 @@ export async function planUpdates({ registry, appId, root, packageName, metadata
     const updates = [];
     for (const entry of selected) {
         const upstream = entry.update.provider.package;
-        const { metadata, url } = await metadataReader(upstream);
+        const type = entry.update.provider.type;
+        const source = provider(type);
+        const { metadata, url } = await metadataReader(upstream, type);
         if (metadata.name !== upstream) {
-            throw new Error(`npm package identity mismatch: ${upstream}`);
+            throw new Error(`Provider package identity mismatch: ${upstream}`);
         }
-        const current = releaseInfo(metadata, upstream, entry.version);
-        const version = selectVersion(metadata, entry.version);
-        const next = version === null ? null : releaseInfo(metadata, upstream, version);
+        const current = source.releaseInfo(metadata, upstream, entry.version);
+        const version = source.selectVersion(metadata, entry.version);
+        const next = version === null ? null : source.releaseInfo(metadata, upstream, version);
         const declarations = entry.licenses?.map(license => license.name) ?? entry.license;
         const licenseReviewRequired = !isDeepStrictEqual(declarations, [current.license])
             || (next !== null && next.license !== current.license);
         updates.push({
             name: entry.name,
-            provider: { type: 'npm', package: upstream, metadataUrl: url },
+            provider: { type, package: upstream, metadataUrl: url },
             policy: entry.update.policy,
             status: next === null ? 'up-to-date' : 'update-available',
             installed: current,

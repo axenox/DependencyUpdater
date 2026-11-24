@@ -7,7 +7,7 @@ import { checkExisting, githubClient, publishCandidate, pullBody, updateBranch }
 function fixture() {
     const oApp = { id: 'exface.Core', repository: 'sergejriel/Core', baseBranch: '1.x-dev' };
     const oCandidate = {
-        kind: 'npm-candidate',
+        kind: 'dependency-candidate',
         plan: {
             app: oApp.id, target: { repository: oApp.repository, branch: oApp.baseBranch, commit: 'base-sha' },
             updates: [{
@@ -66,6 +66,18 @@ test('PR bodies report factual checks, all hashes and generic manual review only
     assert.match(sBody, /original-files-collected/);
     assert.match(sBody, /exact embedded npm archives only/);
     assert.match(sBody, /never the full dependency tree/);
+});
+
+test('Git source reports commit provenance without inventing registry archive integrity', () => {
+    const { candidate } = fixture();
+    candidate.plan.updates[0].candidate = {
+        version: '0.39',
+        source: { type: 'git', url: 'https://github.com/mk-j/PHP_XLSXWriter.git', reference: 'a'.repeat(40) }
+    };
+    const body = pullBody(candidate);
+    assert.match(body, /Git commit: `a{40}`/);
+    assert.match(body, /no registry archive integrity is supplied/);
+    assert.doesNotMatch(body, /undefined|Registry integrity:|Source: undefined/);
 });
 
 test('changed or missing license declarations are highlighted, never described as approved', () => {

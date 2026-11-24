@@ -20,7 +20,7 @@ It is not a runtime dependency of those apps.
 
 Keep the provider, policy and artifact responsibilities separate:
 
-- Provider discovers releases and package provenance, initially from public npm.
+- Provider discovers releases and package provenance from public npm or Packagist.
 - Policy selects allowed exact versions, initially stable same-major.
 - Adapter obtains the configured artifacts and describes actual embedded
   runtime dependencies; it does not decide which target repository is authorized.
@@ -64,9 +64,33 @@ Start with one target/library per transaction and stable branch/PR identity per 
 Do not introduce a general plugin framework or arbitrary build engine before
 a concrete second adapter requires it.
 
+## Active Core trial: preserve integrated PHP_XLSXWriter behavior
+
+Core removed Mermaid from `includes.json`. Keep its implementation registered,
+but use `mk-j/php_xlsxwriter` 0.37 -> 0.39 for the manual fork trial on
+`feature/Devman-3415-dependency-updater`. No other app is enrolled.
+
+Use the public Packagist provider for Composer identity/version metadata and
+the exact official GitHub commit/tree for source files. Verify Git blob hashes,
+manifest identity/license/requirements and preserve supplied originals without
+Composer installation or target-write credentials. Report commit provenance
+rather than a nonexistent registry archive integrity checksum.
+
+The central PHP recipe preserves Core's namespace, fourth header argument,
+column visibility/width options and PHP compatibility behavior. Only reviewed
+upstream source fingerprints and exact transformation anchors are accepted.
+The installed legacy 0.37 fingerprint proves the approved starting adaptation;
+later installed copies must match the previous adapted output. Extra changes
+or new upstream sources require review, never a fuzzy patch or silent overwrite.
+PHP lint runs without executing downloaded source; fixture regression tests
+separately inspect actual XLSX output. See [PHP_XLSXWriter](../Development/PHP_XLSXWriter.md).
+
 ## Mermaid first: consume the published npm distribution
 
-The first workflow targets Core's `npm-asset/mermaid`; its upstream npm identity
+This records the initial implementation. Core has since removed Mermaid;
+retain its recipe, but use the PHP_XLSXWriter trial above for current acceptance.
+
+The first implementation targeted Core's `npm-asset/mermaid`; its upstream npm identity
 is `mermaid`. The reusable `npm-dist` contract maps exact package-relative source
 files to app-relative destinations. Obtain originals from the selected version's
 public npm tarball, verify integrity and package identity, and do not install or

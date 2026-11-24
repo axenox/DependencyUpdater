@@ -3,6 +3,10 @@
 Baseline: 2026-11-03. This is the complete delivery plan for the first central
 Mermaid update-to-PR workflow using its npm distribution, followed by controlled
 rollout and extension. ECharts is deferred, not discarded.
+The current acceptance target has changed to PHP_XLSXWriter 0.37 -> 0.39 after
+Core removed Mermaid. Keep the Mermaid implementation; add only the concrete
+Packagist/source-port path required for this new Core trial before phase 9.
+This is not acceptance of another app or activation of scheduling.
 Local code now includes app/update contracts, metadata planning, original npm
 distribution/evidence validation, candidate reconstruction, GitHub draft
 publication and manual CI wiring. **Implementation is not acceptance:** the real
@@ -333,8 +337,10 @@ findings and failures; no credentials or undeclared writes leak across targets.
    ART-02/ART-03: use the real Apache page, validate actual exact versions and
    downloads, retain Core's selection and add offline failure fixtures plus a
    separate live smoke test. Never add a local bundler/minifier fallback.
-   Treat PHP_XLSXWriter separately as integrated PHP with potential local changes,
-   not an interchangeable npm bundle.
+   The PHP_XLSXWriter Core trial was brought forward: its Packagist provider,
+   commit-bound source reader and reviewed patch-preserving recipe are separate
+   from npm distributions. Complete remote/BOM/manual acceptance in phase 9;
+   local implementation does not waive that gate.
    Implement and accept the ECharts recipe's installed-build proof and
    publication revalidation before registration; do not assume npm-original byte
    equality or permanent byte reproducibility of the online builder.
@@ -367,4 +373,4 @@ following evidence exists:
   merge occurs, and retries/no-ops are safe.
 
 Scheduling and additional adapters are subsequent increments, not reasons to
-delay the first complete manually triggered Mermaid workflow.
+delay the first complete manually triggered Core workflow, now using PHP_XLSXWriter.

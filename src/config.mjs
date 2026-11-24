@@ -6,6 +6,7 @@
 import semver from 'semver';
 import { validatePath, validateOutputs } from './paths.mjs';
 import { supportsAdapter } from './recipes.mjs';
+import { provider } from './providers.mjs';
 
 /** Reject unknown fields so misspellings and executable extensions cannot be ignored. */
 export function fields(value, expected, label) {
@@ -103,16 +104,16 @@ export function validateInventory(inventory, inventoryPath) {
             throw new Error('Unsupported update schema or policy.');
         }
         fields(update.provider, ['type', 'package'], 'provider');
-        if (update.provider.type !== 'npm') {
-            throw new Error('Unsupported provider; expected npm.');
-        }
-        const packageName = validatePackage(update.provider.package);
-        if (entry.name !== `npm-asset/${packageName}` || names.has(entry.name)) {
+        const source = provider(update.provider.type);
+        const packageName = source.validatePackage(update.provider.package);
+        const inventoryName = update.provider.type === 'npm' ? `npm-asset/${packageName}` : packageName;
+        if (entry.name !== inventoryName || names.has(entry.name)) {
             throw new Error(`Conflicting managed package identity: ${entry.name}`);
         }
         names.add(entry.name);
-        exactVersion(entry.version);
-        if (semver.prerelease(entry.version) !== null) {
+        if (update.provider.type === 'npm') exactVersion(entry.version);
+        else source.comparableVersion(entry.version);
+        if (update.provider.type === 'npm' && semver.prerelease(entry.version) !== null) {
             throw new Error(`Prerelease installed versions are unsupported: ${entry.version}`);
         }
         const artifactFields = ['adapter', 'files'];

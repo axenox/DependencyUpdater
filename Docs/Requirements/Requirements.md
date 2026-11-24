@@ -8,9 +8,11 @@ not a description of implemented features. See [Approach](Approach.md),
 
 Maintain third-party libraries bundled directly in registered ExFace app
 repositories through one central updater. Updates must provide matching assets,
-inventory and licensing information in reviewable PRs. Mermaid in Core, obtained
-from its published npm distribution without rebuilding, is the first end-to-end
-case. ECharts and its browser adapter follow later. Development and initial acceptance focus exclusively on
+inventory and licensing information in reviewable PRs. Mermaid's published npm
+distribution was the first implementation. Since Core removed it, the active
+end-to-end trial is PHP_XLSXWriter 0.37 -> 0.39, preserving reviewed Core patches.
+Retain the Mermaid recipe for future consumers.
+ECharts and its browser adapter follow later. Development and initial acceptance focus exclusively on
 Core; other apps are tried only after the Core workflow is complete and accepted.
 The architecture must accommodate that later reuse and different library-specific
 acquisition procedures without implementing or activating additional apps now.
@@ -30,7 +32,7 @@ acquisition procedures without implementing or activating additional apps now.
 
 | ID | Requirement |
 | --- | --- |
-| VER-01 | Initially discover exact release metadata through public npm with explicit network failures, bounded responses/timeouts and provenance validation. |
+| VER-01 | Discover exact releases through public npm or stable Packagist metadata with explicit network failures, bounded responses/timeouts and provenance validation. Preserve Composer's public numeric version spelling while comparing normalized versions under the same policy. |
 | VER-02 | Initially support stable `same-major`: select the highest newer allowed stable, non-deprecated release in the installed major; never select prereleases or downgrade. For `0.x`, minor changes within major zero are allowed. |
 | VER-03 | Verify actual artifact and embedded dependency versions against the selected candidate, not filenames, download success or intended URL alone. Dependency pins must reflect upstream evidence. Reject newly introduced embedded versions below that package's previous minimum; removing a coexisting version is structural, not by itself a downgrade. For every package/adapter, report dependency additions, removals and structural/version changes in the PR without blocking them alone. Keep declared ranges distinct from exact embedded versions. Missing artifact/version evidence and failed configured checks remain errors; license findings follow LIC-01/LIC-02. |
 | VER-04 | An up-to-date entry is a no-op without unnecessary artifact writes or PRs. A future rebuild option, if implemented, must be explicit and use the recorded exact version without weakening policy. |
@@ -46,13 +48,14 @@ acquisition procedures without implementing or activating additional apps now.
 | ART-05 | Capture target commit, selected versions, configuration, source URLs, builder provenance, actual loaded package identities, artifact hashes/sizes and validation scope. Do not claim permanent reproducibility or official Apache distribution status. |
 | ART-06 | Preserve original required licensing/attribution files and verified package metadata alongside the runtime output. Validate the actual candidate, never a substitute build. |
 | ART-07 | Start with Mermaid through the reusable `npm-dist` adapter: verify exact main-package archive integrity before reading mapped original files, without lifecycle scripts, installation or rebuilding. Fail on missing required main-package files, unsafe archives, wrong identity or unsupported assets. Determine embedded identities from actual distribution evidence, not dependency ranges. Reuse supplied terms only with trustworthy exact identity mapping; otherwise read integrity-checked archives of actual embedded packages only. Never traverse the dependency tree or treat file collection as legal completeness. |
+| ART-08 | For the active PHP_XLSXWriter trial, resolve Packagist's exact official GitHub commit/tree and verify selected Git blobs. Preserve the reviewed Core namespace, column-options extension and PHP compatibility behavior through explicit checked recipe transformations. Recognize the legacy integrated file by its reviewed fingerprint and reject additional patches or unreviewed upstream sources. Lint generated PHP without executing downloaded source; preserve original license bytes and provenance. Do not disguise Composer releases as npm packages or claim a registry integrity value that was not supplied. |
 
 ## Isolation, transfer and publication
 
 | ID | Requirement |
 | --- | --- |
 | TX-01 | Work in fresh development/CI workspaces outside production webroots. Do not install updater/browser/build tooling as an app runtime dependency. |
-| TX-02 | Bind candidates to an exact allowlisted target checkout/commit and relevant source fingerprints. Reject changed baselines rather than overwriting concurrent edits. Separately protect modifications present before the run through the recipe's installed-file proof: Mermaid compares all installed mappings byte-for-byte against the previous release's verified npm originals. A future generated bundle needs its own appropriate proof, not a bypass of shared baseline guards. |
+| TX-02 | Bind candidates to an exact allowlisted target checkout/commit and relevant source fingerprints. Reject changed baselines rather than overwriting concurrent edits. Separately protect modifications present before the run through the recipe's installed-file proof: Mermaid compares all installed mappings byte-for-byte against the previous release's verified npm originals; PHP_XLSXWriter accepts only its reviewed legacy Core fingerprint or exact prior adapted output. A future generated bundle needs its own appropriate proof, not a bypass of shared baseline guards. |
 | TX-03 | Reject path traversal, device paths, symlink/junction escapes, duplicate/overlapping outputs and writes outside approved boundaries. |
 | TX-04 | Apply only changed declared files with consistent inventory; leave unchanged assets, historical bundles and unrelated user changes untouched. |
 | TX-05 | Failed/interrupted transactions must not be published as successful. Use disposable checkouts or tested backup/rollback/recovery; never claim globally atomic multi-file replacement. |
@@ -101,7 +104,8 @@ successful candidate.
 - A second local ECharts bundler or undocumented website-source redirection.
 - Automatic repair of PackageManager's unrelated inventory/discovery warnings.
 - Automatic deployment of generated files to live installations.
-- Additional library adapters before the first Mermaid path is validated;
+- Additional library adapters beyond the explicitly approved replacement
+  PHP_XLSXWriter Core trial before the manual path is validated;
   the ECharts online-builder strategy remains a later increment.
 
 ## Decisions that must be resolved during implementation

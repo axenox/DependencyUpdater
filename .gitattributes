@@ -1,0 +1,2 @@
+# Preserve the exact reviewed upstream and integrated-source fixture fingerprints.
+test-support/php-xlsxwriter*.txt -text

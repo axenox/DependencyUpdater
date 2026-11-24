@@ -1,6 +1,6 @@
 # Development status and retained evidence
 
-Status baseline: 2026-11-20. This document records implementation state and
+Status baseline: PHP_XLSXWriter trial. This document records implementation state and
 historical findings, not the desired architecture or an executable CLI contract.
 
 ## Documentation map
@@ -15,8 +15,49 @@ historical findings, not the desired architecture or an executable CLI contract.
 | [Configuration](Configuration.md) | Implemented app/update contracts, CLI and manual workflow setup/retries |
 | [Mermaid findings](Mermaid.md) | First npm workflow and local test-page boundaries |
 | [ECharts findings](ECharts.md) | Online-builder selection, observations and constraints |
+| [PHP_XLSXWriter](PHP_XLSXWriter.md) | Active Core trial, reviewed source port, installed proof and GitHub inputs |
 
 ## Current implementation state
+
+- **Current Core trial:** Mermaid was removed from Core's inventory by the
+  consuming app; its recipe remains registered unchanged. PHP_XLSXWriter 0.37
+  to 0.39 now exercises the manual workflow in `sergejriel/DependencyUpdater`
+  (`master`) against `sergejriel/Core`,
+  `feature/Devman-3415-dependency-updater`.
+- **Implemented:** public Packagist stable metadata/version handling, bounded
+  GitHub commit/tree/raw source reads with per-file Git blob verification,
+  provider-neutral candidate kind `dependency-candidate`, and a trusted
+  `Recipes/php-xlsxwriter` port. The port retains the reviewed Core namespace,
+  column-options API and PHP compatibility behavior, lints PHP without executing
+  downloaded code, and refuses extra installed patches or unknown source hashes.
+  Only upstream 0.37 and 0.39 are currently reviewed. A future release requires
+  explicit recipe review, not automatic fuzzy application.
+- **Real local source/candidate evidence:** public metadata selected 0.39 at
+  commit `67541cff96eab25563aa7fcecba33e03368fa464`. A fresh public clone of the
+  configured Core branch at `b46a4a8c883d921b24f4308bf732661c06cc62f8`, with only
+  the not-yet-published inventory definition overlaid, passed candidate generation
+  and independent reconstruction from fresh provider evidence. The remote
+  runtime matched the reviewed legacy fingerprint without any overlay.
+  Exactly five files are proposed: adapted PHP, original MIT license,
+  source/package evidence, notices, and inventory. No embedded packages or
+  changed upstream license/runtime requirements were found. Artifacts remain
+  in an external development workspace; no live runtime, push, dispatch or PR
+  was performed.
+- **Local validation:** all **79 offline tests passed**, none failed/skipped,
+  in the external Node.js 24 workspace. This includes the retained Mermaid
+  suite, provider/source failure cases, extra-patch protection, full PHP
+  candidate reconstruction/no-op and actual XLSX ZIP/XML regression for hidden/
+  collapsed columns, custom/default/legacy widths, formulas and null escaping.
+  The current real PackageManager `IncludesBOM`, local-file license enricher
+  and full JSON/Markdown exporters were exercised against isolated materialized
+  candidate files: `mk-j/php_xlsxwriter` 0.39 retains the exact original MIT
+  text through the owning-app file path. No warnings occurred in this focused
+  consumer check; it is not installation-wide `GenerateLicenseBOM` acceptance,
+  remote enrichment coverage or approval of unrelated inventory entries.
+- **Acceptance remains open:** the user reports the publishing environment is
+  configured, but remote workflow/publication, installation-wide BOM and manual
+  PowerUI export acceptance have not been performed. Historical Mermaid
+  counts/results below are not evidence of this new PHP trial's acceptance.
 
 - **2026-11-20 approved original-text revision:** shared collection first reuses
   trustworthy exact recipe-mapped upstream terms, otherwise reads integrity-checked
@@ -47,7 +88,8 @@ historical findings, not the desired architecture or an executable CLI contract.
   This is focused consumer serialization, not a full installation
   `GenerateLicenseBOM`/enrichment acceptance run. The IDE build succeeded with
   limited build diagnostics; Node tests are the authoritative executable gate.
-- Mermaid in Core is the first implementation path; ECharts is deferred.
+- Mermaid was the first implementation path; the current trial is PHP_XLSXWriter
+  and ECharts remains deferred.
   Other apps remain deferred until the Core workflow is accepted.
 - **2026-11-04 recipe separation:** Mermaid-specific filenames, runtime/map
   checks, evidence extraction and installed-copy validation now live in
@@ -74,10 +116,11 @@ historical findings, not the desired architecture or an executable CLI contract.
   validation, source-map embedded identities, exact embedded original licensing,
   candidate generation/reconstruction and GitHub Git Data API draft publication.
   Exact tooling dependencies are `semver`, `acorn` and `tar-stream`.
-- The sole enabled registration targets **`sergejriel/Core`, `1.x-dev`**, with
+- The sole enabled registration targets **`sergejriel/Core`,
+  `feature/Devman-3415-dependency-updater`**, with
   owning vendor path `exface/core`. Updater origin is
   `https://github.com/axenox/DependencyUpdater.git`; the local Git branch is `master`.
-- Core's adjusted `includes.json` keeps Mermaid **12.2.0** and original runtime
+- Historical Core trial: the adjusted `includes.json` kept Mermaid **12.2.0** and original runtime
   files. It declares Core's own named MIT license file and two generated evidence
   destinations. The user must upload this inventory to the fork before trial.
 - Shared dependency comparison/PR reporting covers additions, removals and changed

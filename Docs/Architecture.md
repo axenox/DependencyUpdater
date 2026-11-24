@@ -14,11 +14,13 @@ Consuming apps retain their inventory and bundled files; they do not install
 copies of the updater. `Config/apps.json` authorizes repositories independently
 of each target's declarative `includes.json`.
 
-The current public target is `sergejriel/Core`, branch `1.x-dev`, registered as
-`exface.Core`. npm discovery, same-major policy, path validation, candidate
+The current public target is `sergejriel/Core`, branch
+`feature/Devman-3415-dependency-updater`, registered as
+`exface.Core`. npm/Packagist discovery, same-major policy, path validation, candidate
 reporting and GitHub publication are shared concerns. A trusted recipe dispatcher
-selects bundle-specific logic under `Recipes`; Mermaid is its first executable
-registration. The Apache ECharts browser recipe, scheduling, private target
+selects bundle-specific logic under `Recipes`; the active trial is PHP_XLSXWriter
+0.37 -> 0.39. Mermaid's initial recipe remains registered after its Core inventory
+removal. The Apache ECharts browser recipe, scheduling, private target
 checkout and GitHub App authentication are not implemented.
 
 For **all packages**, structural dependency changes are review information, not
@@ -37,9 +39,9 @@ workflow_dispatch: app + package
   +-- prepare job: no target-write secret
   |     Config/apps.json -> public target clone -> includes.json
   |       -> validate config and baseline
-  |       -> npm metadata + same-major selection
+  |       -> provider metadata + same-major selection
   |       -> trusted recipe -> verified artifacts + installed-copy checks
-  |       -> normalized identities/evidence + npm declarations + upstream notices
+  |       -> normalized identities/evidence + declarations + upstream notices
   |       -> proposed inventory + evidence + changed-file payload
   |       -> candidate.json uploaded as a workflow artifact
   |
@@ -68,6 +70,7 @@ No updater operation deploys assets to a live installation.
 | [`package.json`](../package.json) | Private ESM Node.js 24 package, CLI convenience scripts and exact runtime-tooling dependencies: `semver` for policy/version comparisons, `tar-stream` for archive reading and `acorn` for parsing JavaScript without executing it. `npm test` targets only `test/*.test.mjs`, never tests inside cloned app repositories. |
 | [`package-lock.json`](../package-lock.json) | npm-generated locked transitive dependency graph and integrity information for `npm ci`. Update through npm, not manual dependency copying or lockfile editing. |
 | [`.gitignore`](../.gitignore) | Excludes installed dependencies, IDE state, logs and local environment/secret files. |
+| [`.gitattributes`](../.gitattributes) | Disables text conversion for the immutable upstream/Core PHP_XLSXWriter source/license fixtures so Git checkout settings cannot invalidate approved fingerprints. |
 | [`LICENSE`](../LICENSE) | Repository's own GPL version 3 license text. It is separate from original upstream terms preserved in target-library evidence. |
 | [`README.md`](../README.md) | Human entry point: scope, setup, workflow activation and documentation links. |
 
@@ -89,6 +92,8 @@ Entries without `update` are not enrolled automatically.
 | [`src/paths.mjs`](../src/paths.mjs) | `validatePath` accepts literal portable app-relative paths and rejects traversal, devices, `.git`, patterns and unsafe components. `validateOutputs` rejects duplicate/case-overlapping/ancestor outputs. `resolveFile` checks the root and every existing ancestor without following symlinks/junctions. `fingerprint` records exact SHA-256/size or explicit absence. `readJson` reads bounded regular files without executing them. Used by configuration, planning and candidate orchestration. |
 | [`src/config.mjs`](../src/config.mjs) | `fields` enforces exact configuration fields. `validateApps` validates authorization/uniqueness before target access; `selectApps` only narrows enabled registrations. `validatePackage` and `exactVersion` distinguish npm identities from Asset Packagist aliases and exact versions from ranges. `validateInventory` validates managed definitions and all output boundaries while preserving unmanaged entries. |
 | [`src/npm.mjs`](../src/npm.mjs) | `fetchMetadata` reads bounded public npm JSON without auth or redirects. `selectVersion` selects the highest newer stable non-deprecated same-major release, including minor updates within major zero. `releaseInfo` validates identity, exact registry tarball URL, SHA-512 declaration, license and dependency ranges; embedded metadata inspection explicitly permits absent license declarations and records null. `dependencyChanges` compares arbitrary dependency declaration maps without a package-specific blocker. |
+| [`src/packagist.mjs`](../src/packagist.mjs) | Validates Composer identities/public numeric versions, expands stable `p2` metadata inheritance/removals, selects stable newer same-major releases, and validates exact GitHub source commits, normalized versions, license and runtime requirements. `packageReader` bounds unauthenticated commit/tree/raw reads, rejects unsafe/truncated/link trees, obtains declared files plus supplied original terms/READMEs, verifies every selected Git blob hash/size, checks composer.json identity/license/requirements and records commit/tree/URL/SHA-256 evidence. Never installs Composer or executes downloaded PHP. |
+| [`src/providers.mjs`](../src/providers.mjs) | Trusted provider-type dispatch for metadata and main-package readers. Keeps npm archive and Packagist/Git provenance/version semantics separate without package-name branches. Embedded npm acquisition retains its existing strict contract. |
 | [`src/planner.mjs`](../src/planner.mjs) | `checkoutIdentity` binds the root to its registered GitHub origin, branch and HEAD. `planUpdates` validates the inventory before metadata access, fingerprints inventory and all declared output/evidence paths, selects releases and reports declaration changes/license-review flags. It rechecks files and Git identity before returning a `metadata-plan`; artifact/integration checks are explicitly not performed at this stage. |
 | [`src/archive.mjs`](../src/archive.mjs) | `download` permits only credential-free public registry URLs and bounds time/compressed bytes. `readArchive` verifies SHA-512 before gzip/tar parsing, bounds expanded bytes/member count, rejects unsafe paths, duplicates and links, and reads original files into memory without disk extraction. `member` requires a nonempty original file. |
 | [`src/distribution.mjs`](../src/distribution.mjs) | Package-neutral helpers. `packageReader` caches verified exact archives/metadata separately for strict main and embedded mode. Identity/integrity stay mandatory; only embedded declaration conflicts pass to review. `embeddedPackages` reads exact pnpm source-map identities when recipes opt in. `originalTerms` preserves original license/notice/copyright/sidecar and relevant README text plus base64 bytes and hashes, including optional genuine absence without swallowing errors. It never infers an SPDX license or completeness. `compareEmbedded` reports structural changes and rejects newly introduced versions below a package's previous minimum. `sha256` hashes original bytes. No bundle names, runtime markers or fixed artifact paths belong here. |
@@ -106,6 +111,7 @@ Each source module starts with a short responsibility/boundary comment.
 | File | Responsibility |
 | --- | --- |
 | [`Recipes/mermaid/index.mjs`](../Recipes/mermaid/index.mjs) | `prepare` reads verified npm originals, checks Mermaid's version/global markers, JS syntax, required members, adjacent map and exact pnpm identities. It optionally supplies `embeddedTerms` only for original terms at exact pnpm source-map paths, with archive URL/integrity and map path/hash. It returns normalized outputs, license destinations, terms, embedded identities, description, evidence and checks. `validateInstalled` checks owning-app licensing and byte equality against the installed release's original mappings. It owns every Mermaid filename and special rule. |
+| [`Recipes/php-xlsxwriter/index.mjs`](../Recipes/php-xlsxwriter/index.mjs) | Accepts reviewed upstream 0.37/0.39 source hashes and checked anchors, preserves Core's namespace/four-argument column API/compatibility behavior, retains upstream fixes, and lints PHP through stdin with restricted environment and no execution. `validateInstalled` proves the reviewed legacy Core fingerprint or exact prior adapted output and owning-app original license; only CRLF checkout normalization is allowed for PHP. Initial missing auxiliary license is allowed, mismatched existing terms are not. New versions require explicit recipe review. Returns source/patch/hash evidence and no fabricated embedded packages. |
 
 `prepare(entry, version, {readPackage})` returns `name`, `version`, `license`,
 `licenses`, `outputs`, `embedded`, `embeddedDescription`, `terms`, `evidence`
@@ -130,6 +136,8 @@ Its proof method is recipe-specific; it must not be a silent no-op for a new
 bundle. The Mermaid proof is explained step-by-step in
 [installed-file protection](Development/Configuration.md#protecting-existing-files-before-an-update).
 Shared SHA-256 fingerprints and the Git identity are always rechecked separately.
+PHP_XLSXWriter's legacy/adapted proof and fixed reviewed source limits are explained
+in [its development guide](Development/PHP_XLSXWriter.md).
 
 ECharts will use the actual Apache online builder, not the Mermaid recipe or a
 local bundler. This refactor does not claim that a browser build can be compared
@@ -144,8 +152,8 @@ These are output contracts, not checked-in updater source files.
 | Output | Contents and consumer |
 | --- | --- |
 | `metadata-plan` JSON | Registered target/commit, input/output fingerprints, selected releases, original metadata provenance, declared dependency-range changes and explicit validation scope. Consumed by candidate orchestration and reviewers, not sufficient for publication. |
-| `candidate.json` | Versioned `no-op` or `npm-candidate`. Contains plan, changed paths/sizes/SHA-256/base64 bytes, exact embedded identities/npm declarations, structural changes, checks and `licenseReview`. The latter records strategy `exact-embedded-originals`, status `required`, original upstream terms, changed declarations and explicit missing/contradictory evidence warnings. Completely reconstructed by the publisher, including embedded archive evidence. |
-| Target's original mapped files | Byte-for-byte selected npm members: current Mermaid JS, map, package.json, README and LICENSE. No re-minification, dependency installation or code execution. |
+| `candidate.json` | Versioned `no-op` or provider-neutral `dependency-candidate` (replaces the former `npm-candidate`; regenerate old payloads). Contains plan, changed paths/sizes/SHA-256/base64 bytes, exact embedded identities/npm declarations where present, structural changes, checks and `licenseReview`. The latter records strategy `exact-embedded-originals`, status `required`, original upstream terms, changed declarations and explicit missing/contradictory evidence warnings. Completely reconstructed by the publisher from provider-specific source evidence. |
+| Target's mapped files | Byte-for-byte selected Mermaid npm members, or explicitly adapted reviewed PHP_XLSXWriter source plus unchanged original MIT license. No re-minification, dependency installation or runtime execution during acquisition. |
 | Target's configured `bundled-packages.json` | Owner/version, recipe-supplied `artifactEvidence` (Mermaid: `sourceMapSha256`), exact embedded identities/source paths, registry declaration/URL, manifest declaration/check flag, original `terms` with paths/hashes/text/base64 bytes, `termProvenance` with archive URL/integrity and manifest hash/path or exact map evidence, and `licenseReview`. `inventoryEntries` binds precisely which generated entries may be replaced later. |
 | Target's configured `THIRD_PARTY_LICENSES.txt` | Original upstream and exact embedded license/notice/copyright/relevant README texts grouped by exact identity, with source provenance, original hashes, declarations and warnings. Its header explicitly states that legal completeness has not been verified. Unknown declarations retain originals here. |
 | Target's `includes.json` | Updated main version/license-file declaration and exact embedded entries with npm-declared names plus only their own original texts in supported `licenses[].text`, or an empty list for unknown declarations (their originals remain in notices/evidence). No generic/main/multi-package text is assigned to embedded code. Unrelated entries and separate versions remain; main license-file ownership uses `vendorPath`. |
@@ -180,8 +188,14 @@ token mode of the current `GET /user`-based publisher.
 | File | Coverage/responsibility |
 | --- | --- |
 | [`test-support/fixtures.mjs`](../test-support/fixtures.mjs) | Independent central-registry, app-inventory and npm-metadata fixtures. Dependency ranges intentionally do not claim exact bundled versions. |
+| [`test-support/php-xlsxwriter.mjs`](../test-support/php-xlsxwriter.mjs) | Realistic offline Composer metadata/entry/package fixtures and reviewed upstream/Core source readers for provider, recipe and full candidate tests. |
+| [`test-support/php-xlsxwriter-0.37.php.txt`](../test-support/php-xlsxwriter-0.37.php.txt), [`test-support/php-xlsxwriter-0.39.php.txt`](../test-support/php-xlsxwriter-0.39.php.txt) | Immutable official upstream source snapshots at documented commits/hashes, acquired without editing; `.txt` avoids treating fixtures as installed classes. |
+| [`test-support/php-xlsxwriter-core-0.37.php.txt`](../test-support/php-xlsxwriter-core-0.37.php.txt) | Independently reviewed legacy Core integration snapshot. Its fingerprint tests the installed baseline independently of newly generated adaptation output. |
+| [`test-support/php-xlsxwriter.LICENSE.txt`](../test-support/php-xlsxwriter.LICENSE.txt) | Complete upstream MIT copyright/terms accompanying the original source snapshots and small adaptation fragments. |
 | [`test/config.test.mjs`](../test/config.test.mjs) | Authorized/disabled/duplicate app registrations, schema validation, managed/unmanaged inventory, identity checks and unsafe/overlapping paths. |
 | [`test/npm.test.mjs`](../test/npm.test.mjs) | Same-major/stable/deprecation/no-op selection, exact registry provenance, bounded unauthenticated fetches and explicit network/metadata failures. |
+| [`test/packagist.test.mjs`](../test/packagist.test.mjs) | Composer identities/version normalization/inheritance, stable zero-major/no-op selection, source provenance and bounded unauthenticated fetches. Mocked commit/tree/raw acquisition covers original sidecars, blob identity, caching, malformed/truncated/link trees, wrong commits, missing files and corruption. |
+| [`test/php-xlsxwriter.test.mjs`](../test/php-xlsxwriter.test.mjs) | Reviewed source adaptation and PHP lint, legacy/extra-patch/license guards, actual ZIP/XML column visibility/width/formula/null regression, complete 0.37 -> 0.39 candidate reconstruction/tampering/source-preservation and no-op behavior. Fixture runtime executes only reviewed local test code in disposable external directories; acquisition executes no downloaded source. |
 | [`test/planner.test.mjs`](../test/planner.test.mjs) | Temporary Git checkouts, correct target identity, repeatable read-only plans, no-op/unmanaged behavior, stale baselines, changed declarations and junction/symlink guards. |
 | [`test/archive.test.mjs`](../test/archive.test.mjs) | Controlled tar/gzip fixtures, integrity-before-parsing, archive/network bounds, unsafe members, exact source-map identities, structural reporting including removal of coexisting versions, original terms/relevant README handling without declaration inference, optional genuine absence and required main-package metadata agreement. |
 | [`test/candidate.test.mjs`](../test/candidate.test.mjs) | Original-byte reconstruction/tampering/baseline/ownership guards, exact embedded originals in notices/evidence/inline text, preserved unmapped upstream sidecars, main and embedded license-change findings, explicit unknown declarations, inconsistent installed-license errors and coexisting-version comparisons. |
@@ -206,6 +220,7 @@ Linux CI, remote publication or actual PowerUI compatibility.
 | [`Docs/Development/Configuration.md`](Development/Configuration.md) | Current app/update schema, CLI commands and operator workflow/setup/retry behavior. |
 | [`Docs/Development/Bundled_library_updates.Instructions.md`](Development/Bundled_library_updates.Instructions.md) | Canonical development rules for central ownership, provenance, isolation, licensing and review. |
 | [`Docs/Development/Mermaid.md`](Development/Mermaid.md) | Concrete npm distribution/embedded-license observations and the local test page's acceptance boundary. |
+| [`Docs/Development/PHP_XLSXWriter.md`](Development/PHP_XLSXWriter.md) | Current Core trial, official commits/hashes, reviewed local adaptations, source/installed proof, output contract, fixture provenance, version limits and manual GitHub inputs. |
 | [`Docs/Development/ECharts.md`](Development/ECharts.md) | Deferred Apache online-builder research, actual selection and observed version-pinning limitations. |
 
 Ignored `.git`, `.idea`, `node_modules`, secret files, caches, downloaded archives

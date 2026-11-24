@@ -37,8 +37,14 @@ export function pullBody(oCandidate) {
         `Update **${oUpdate.name}** from **${oUpdate.installed.version}** to **${oUpdate.candidate.version}**.`,
         '',
         `Base commit: \`${oCandidate.plan.target.commit}\``,
-        `Source: ${oUpdate.candidate.tarball}`,
-        `Registry integrity: \`${oUpdate.candidate.integrity}\``,
+        ...(oUpdate.candidate.source ? [
+            `Source: ${oUpdate.candidate.source.url}`,
+            `Git commit: \`${oUpdate.candidate.source.reference}\``,
+            'Source identity: commit tree and Git blob hashes checked; no registry archive integrity is supplied.'
+        ] : [
+            `Source: ${oUpdate.candidate.tarball}`,
+            `Registry integrity: \`${oUpdate.candidate.integrity}\``
+        ]),
         '',
         '### License review required — no automatic approval',
         'Strategy: reuse exactly mapped upstream originals; otherwise verify exact embedded npm archives only, never the full dependency tree.',
@@ -74,14 +80,14 @@ export function pullBody(oCandidate) {
         ...(Object.values(oCandidate.dependencyChanges).every(aChanges => aChanges.length === 0)
             ? ['No embedded package identity/version changes.'] : []),
         '',
-        'Supplied upstream license/notice texts and exact source-map identities are retained in the evidence files.',
+        'Supplied upstream license/notice texts and recipe-specific source identities are retained in the evidence files.',
         'Embedded inventory licenses retain npm declarations and package-specific original texts when declared; unknown declarations retain originals in the notices/evidence, not a guessed license.',
         'License approval and full installation BOM acceptance remain the reviewer’s responsibility; this is a draft PR.',
         '',
         'Integration and functionality in PowerUI have not been automatically verified.',
         'The responsible developer determines and performs the required manual checks during review before merge.',
         '',
-        'No automatic merge. No package scripts or downloaded JavaScript were executed.'
+        'No automatic merge. No package scripts or downloaded runtime code were executed; PHP syntax lint does not execute the source.'
     ];
     return aLines.join('\n');
 }
@@ -117,7 +123,7 @@ export async function publishCandidate(oCandidate, oApp, fnApi) {
     if (oCandidate.kind === 'no-op') {
         return { status: 'no-op' };
     }
-    if (oCandidate.kind !== 'npm-candidate' || oCandidate.plan.app !== oApp.id
+    if (oCandidate.kind !== 'dependency-candidate' || oCandidate.plan.app !== oApp.id
         || oCandidate.plan.target.repository !== oApp.repository
         || oCandidate.plan.target.branch !== oApp.baseBranch || !oCandidate.files.length) {
         throw new Error('Candidate target/publication contract mismatch.');

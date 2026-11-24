@@ -8,6 +8,9 @@ import { validateOutputs } from './paths.mjs';
 const aRegistrations = [{
     provider: 'npm', package: 'mermaid', adapter: 'npm-dist',
     load: () => import('../Recipes/mermaid/index.mjs')
+}, {
+    provider: 'packagist', package: 'mk-j/php_xlsxwriter', adapter: 'php-source',
+    load: () => import('../Recipes/php-xlsxwriter/index.mjs')
 }];
 
 /** Recognize only artifact mechanisms supplied by a centrally registered recipe. */

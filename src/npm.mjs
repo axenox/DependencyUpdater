@@ -5,10 +5,11 @@
  */
 import semver from 'semver';
 import { exactVersion, validatePackage } from './config.mjs';
+export { validatePackage } from './config.mjs';
 
 const REGISTRY = 'https://registry.npmjs.org/';
 
-/** Report added, removed and changed dependency declarations for any npm package, without blocking them. */
+/** Report added, removed and changed dependency declarations for any provider, without blocking them. */
 export function dependencyChanges(oPrevious, oNext) {
     return {
         added: Object.keys(oNext).filter(sName => !Object.hasOwn(oPrevious, sName))

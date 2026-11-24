@@ -41,8 +41,11 @@ working instructions or mark a phase complete based on documentation alone.
 - The versioned schema, app list, metadata CLI, candidate reconstruction and manual
   draft-PR publisher are implemented locally; rollout acceptance is pending.
   Do not treat metadata plans as
-  approved updates or invent fields unsupported by the consumer. Start with
-  Mermaid in Core; keep ECharts as a later adapter. Do not retain references to
+  approved updates or invent fields unsupported by the consumer. The active Core
+  trial is PHP_XLSXWriter 0.37 -> 0.39; preserve its reviewed integrated adaptations.
+  Keep the Mermaid recipe registered without restoring its removed Core entry,
+  and keep ECharts as a later adapter. Read [PHP_XLSXWriter](PHP_XLSXWriter.md)
+  before changing its source-port proof. Do not retain references to
   deleted Core recipes or add placeholder build commands.
 
 ## Inspect before changing
@@ -104,6 +107,10 @@ that upstream code is trustworthy or reproducible forever.
   earlier patches. See Configuration's installed-file protection explanation.
   A future generated-bundle recipe needs an appropriate explicit proof, not a
   silent no-op or a comparison with an unrelated prebuilt npm file.
+  PHP_XLSXWriter accepts only its reviewed legacy Core fingerprint or exact prior
+  adapted output; never drop Core patches or fuzzy-apply them to unknown releases.
+  Its Packagist provider preserves numeric public versions and verifies selected
+  files against the exact GitHub commit/tree. Do not invent registry integrity.
 - Failed downloads, partial outputs, unexpected files, invalid metadata,
   timeouts and failed configured checks must stop the update explicitly.
   Retain failure reports/logs; never emit success-shaped results.

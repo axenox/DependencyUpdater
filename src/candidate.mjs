@@ -8,9 +8,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { selectApps, validateInventory } from './config.mjs';
 import { fingerprint, readJson, resolveFile } from './paths.mjs';
 import { planUpdates, checkoutIdentity } from './planner.mjs';
-import { packageReader, compareEmbedded, sha256 } from './distribution.mjs';
+import { packageReader as npmReader, compareEmbedded, sha256 } from './distribution.mjs';
 import { resolveRecipe, validateRecipeResult } from './recipes.mjs';
-import { fetchMetadata } from './npm.mjs';
+import { fetchMetadata, packageReader } from './providers.mjs';
 import { inspectLicenses, noticeText, inventoryLicenses } from './licenses.mjs';
 
 /** Serialize evidence deterministically; preserve original artifact/license bytes separately. */
@@ -28,13 +28,13 @@ export async function createCandidate({
     }
     const [oApp] = selectApps(oRegistry, sAppId);
     const oMetadataCache = new Map();
-    const fnMetadata = sName => {
-        if (!oMetadataCache.has(sName)) {
-            oMetadataCache.set(sName, fnMetadataReader(sName));
+    const fnMetadata = (sName, sType = 'npm') => {
+        const sKey = `${sType}:${sName}`;
+        if (!oMetadataCache.has(sKey)) {
+            oMetadataCache.set(sKey, fnMetadataReader(sName, sType));
         }
-        return oMetadataCache.get(sName);
+        return oMetadataCache.get(sKey);
     };
-    const fnReadOriginal = fnReadPackage ?? packageReader({ metadataReader: fnMetadata });
     const oPlan = await planUpdates({
         registry: oRegistry, appId: sAppId, root: sRoot,
         packageName: sPackageName, metadataReader: fnMetadata
@@ -47,6 +47,7 @@ export async function createCandidate({
     validateInventory(oInventory, oApp.inventory);
     const oEntry = oInventory.find(oItem => oItem.name === sPackageName && oItem.update);
     const oRecipe = await resolveRecipe(oEntry);
+    const fnReadOriginal = fnReadPackage ?? packageReader(oEntry, fnMetadata);
     const oPrevious = validateRecipeResult(
         await oRecipe.prepare(oEntry, oEntry.version, { readPackage: fnReadOriginal }), oEntry, oEntry.version);
     const oNext = validateRecipeResult(
@@ -57,7 +58,8 @@ export async function createCandidate({
         readInstalled: async sPath => readFile(await resolveFile(sRoot, sPath))
     });
     const oDependencyChanges = compareEmbedded(oPrevious.embedded, oNext.embedded);
-    const { packages: aPackages, review: oLicenseReview } = await inspectLicenses(oPrevious, oNext, fnMetadata, fnReadOriginal);
+    const { packages: aPackages, review: oLicenseReview } = await inspectLicenses(
+        oPrevious, oNext, fnMetadata, fnReadPackage ?? npmReader({ metadataReader: fnMetadata }));
     const aInventoryEntries = aPackages.map(oPackage => ({
         name: `npm-asset/${oPackage.name}`,
         version: oPackage.version,
@@ -90,6 +92,7 @@ export async function createCandidate({
     oEntry.licenses = oNext.licenses.map(oLicense => ({
         ...oLicense, file: `${oApp.vendorPath}/${oLicense.file}`
     }));
+    for (const sLegacy of ['license', 'license_file', 'license_link']) delete oEntry[sLegacy];
     const aOutputs = [...oNext.outputs, {
         path: oEvidence.packages,
         bytes: jsonBytes({
@@ -129,7 +132,7 @@ export async function createCandidate({
     }
     return {
         schemaVersion: 1,
-        kind: 'npm-candidate',
+        kind: 'dependency-candidate',
         plan: oPlan,
         files: aFiles,
         embedded: aPackages.map(({ name, version, license, licenseSource, metadataUrl }) => ({

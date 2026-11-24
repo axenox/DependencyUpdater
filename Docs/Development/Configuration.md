@@ -10,7 +10,8 @@ See [architecture](../Architecture.md) for all files and interactions,
 Use Node.js 24 LTS. Dependencies `semver`, `acorn` and `tar-stream` are pinned; tests use
 Node's native runner. Install in a development checkout outside a production
 webroot using `npm ci --ignore-scripts --no-audit --no-fund`, then `npm test`.
-No Composer dependency, browser or upstream build tool is needed.
+PHP 8 with ZIP is required for PHP syntax lint and offline XLSX behavior tests.
+No Composer installation, browser or upstream build tool is needed.
 The source directory under `vendor/axenox/DependencyUpdater` is not a sandbox;
 run downloads and future browser execution in isolated external workspaces.
 
@@ -23,7 +24,7 @@ and an `apps` array. Every entry requires exactly these fields:
 | --- | --- |
 | `id` | Stable app selector, initially `exface.Core` only |
 | `repository` | Allowed GitHub owner/repository, currently test fork `sergejriel/Core` |
-| `baseBranch` | Allowed branch, currently Core's `1.x-dev` |
+| `baseBranch` | Allowed branch, currently Core's `feature/Devman-3415-dependency-updater` |
 | `inventory` | Literal app-relative inventory path, `includes.json` |
 | `vendorPath` | Owning vendor/package for license-file paths, currently `exface/core`; independent of GitHub owner/repository |
 | `enabled` | Boolean eligibility flag; disabled entries cannot be selected |
@@ -36,7 +37,14 @@ restricts selection. An empty enabled list performs no target work.
 ## Optional inventory update definition
 
 The existing inventory array and all unmanaged entries remain unchanged.
-Core's `npm-asset/mermaid` entry now has this versioned definition:
+The active Core entry is now `mk-j/php_xlsxwriter`; its complete definition and
+reviewed 0.37 -> 0.39 source port are documented in
+[PHP_XLSXWriter](PHP_XLSXWriter.md#core-inventory-and-candidate-outputs).
+It uses provider `packagist`, adapter `php-source`, exact public versions such
+as `0.37`, and explicit source/license/evidence destinations.
+
+The retained Mermaid recipe accepts the following definition when a consuming
+app actually includes Mermaid. Do not restore its removed Core entry:
 
 ```json
 {
@@ -62,25 +70,28 @@ Core's `npm-asset/mermaid` entry now has this versioned definition:
 }
 ```
 
-This is the value of `update`, not the complete inventory entry. The real Core
-definition additionally maps the source map, package.json, README and LICENSE.
+This is the value of `update`, not the complete inventory entry. A complete
+Mermaid definition additionally maps the source map, package.json, README and LICENSE.
 `source` is relative to the npm package root (excluding the archive's `package/`
 prefix); `target` is relative to the app checkout. The adapter identifier is
 resolved through the trusted provider/package/adapter registry in `src/recipes.mjs`.
-Currently only the Mermaid recipe is executable; its implementation lives in
-`Recipes/mermaid/index.mjs`, outside shared orchestration.
+Executable recipes live in `Recipes/mermaid/index.mjs` and
+`Recipes/php-xlsxwriter/index.mjs`, outside shared orchestration.
 Candidate generation requires all five mappings and both evidence outputs.
 The map must be adjacent to the runtime, with the runtime path plus `.map`.
 Source-map identities and original terms are evidence, not automatic license
 approval or installation-wide BOM acceptance.
 
-Core declares the top-level original terms as
+A consuming Mermaid entry declares the top-level original terms as
 `licenses: [{"name":"MIT","file":"exface/core/Facades/AbstractAjaxFacade/js/mermaid/LICENSE.txt"}]`.
 It must not point into another app or retain legacy `license_file`.
 
-Only public `npm`, `same-major`, schema version 1 and `npm-dist` are currently
-accepted. The inventory name must match `npm-asset/` plus the upstream name.
-Installed versions must be canonical stable exact SemVer. Reject unsupported
+Public `npm` and `packagist`, `same-major`, and schema version 1 are accepted.
+For npm, the inventory name must match `npm-asset/` plus the upstream name,
+and installed versions must be canonical stable exact SemVer.
+For Packagist, use the Composer vendor/package name without an npm prefix;
+stable numeric two-/three-component versions retain their public spelling.
+Only registered adapters (`npm-dist`, `php-source`) are accepted. Reject unsupported
 fields/adapters, duplicate identities/sources, overlapping destinations including
 the inventory, globs, devices, traversal and symlink/junction paths.
 Do not add shell commands or arbitrary executable adapters.
@@ -96,7 +107,7 @@ From the DependencyUpdater development directory:
 
 ```powershell
 node cli.mjs apps
-node cli.mjs plan --app exface.Core --root 'C:\path\to\Core' --package npm-asset/mermaid
+node cli.mjs plan --app exface.Core --root 'C:\path\to\Core' --package mk-j/php_xlsxwriter
 ```
 
 Omit `--package` to plan all managed entries in that selected app. Planning
@@ -109,8 +120,14 @@ configuration changes. It records Git HEAD and exact inventory/output SHA-256
 fingerprints, missing destinations and source URLs; it rechecks the baseline
 before returning. This is not authorization for later transfer.
 
-Metadata comes exclusively from public registry.npmjs.org without authentication
+Npm metadata comes from public registry.npmjs.org without authentication
 or redirect following, with a 30-second timeout and 32 MiB response limit.
+Packagist metadata comes from repo.packagist.org's stable `p2` endpoint,
+with a 60-second timeout and 16 MiB response limit. The reader expands its
+`composer/2.0` inheritance/removal format and checks normalized versions.
+Only exact GitHub source commits are supported for its source-file acquisition;
+commit/tree/raw responses are bounded and every selected Git blob is verified.
+See [source proof](PHP_XLSXWriter.md#provider-policy-and-source-proof).
 Selection uses the highest newer stable non-deprecated release in the installed
 major, including minor updates within major zero. Dist-tags do not override it.
 No newer allowed version reports `up-to-date` with a null candidate.
@@ -130,21 +147,22 @@ directory, and `--output` for prepare, must be new; their parent directories mus
 already exist. They do not reuse a live app checkout.
 
 ```powershell
-node pipeline.mjs prepare --app exface.Core --package npm-asset/mermaid --workspace 'C:\temp\generation' --output 'C:\temp\candidate'
-node pipeline.mjs verify --app exface.Core --package npm-asset/mermaid --workspace 'C:\temp\verification' --candidate 'C:\temp\candidate\candidate.json'
-node pipeline.mjs publish --app exface.Core --package npm-asset/mermaid --workspace 'C:\temp\publication' --candidate 'C:\temp\candidate\candidate.json'
+node pipeline.mjs prepare --app exface.Core --package mk-j/php_xlsxwriter --workspace 'C:\temp\generation' --output 'C:\temp\candidate'
+node pipeline.mjs verify --app exface.Core --package mk-j/php_xlsxwriter --workspace 'C:\temp\verification' --candidate 'C:\temp\candidate\candidate.json'
+node pipeline.mjs publish --app exface.Core --package mk-j/php_xlsxwriter --workspace 'C:\temp\publication' --candidate 'C:\temp\candidate\candidate.json'
 ```
 
-`prepare` creates `candidate.json` with `kind: npm-candidate`, the plan,
+`prepare` creates `candidate.json` with `kind: dependency-candidate`, the plan,
 changed-file bytes/hashes/sizes, embedded versions/licenses, dependency changes
 and check scope. Up-to-date versions produce `kind: no-op` without downloads.
 Only `publish` can write to GitHub, and only through the explicit API token.
 Do not invoke it merely to validate source changes.
 
 Both `verify` and `publish` recreate the entire candidate from current trusted
-configuration, a fresh baseline and public verified npm evidence. They reject
+configuration, a fresh baseline and public provider-specific source evidence. They reject
 changed payloads, reports, registry selection or baselines rather than trusting
-the artifact's check flags. No package scripts or downloaded JS execute.
+the artifact's check flags. No package scripts or downloaded runtime code execute
+during acquisition; PHP syntax lint parses source without running it.
 Recipe-specific evidence is stored under `artifactEvidence` in the generated
 package report; Mermaid's map hash is `artifactEvidence.sourceMapSha256`.
 Regenerate previously prepared candidates after changing trusted recipe code or
@@ -184,7 +202,15 @@ only establishes which original files are being replaced without silently losing
 local modifications. New-release artifact checks and manual integration review
 are separate.
 
-This exact proof method belongs to the Mermaid recipe, not to all bundles.
+PHP_XLSXWriter instead proves the explicitly reviewed legacy Core fingerprint,
+then compares subsequent installed files to the previous adapted output.
+It preserves the namespace, four-argument column API and compatibility fixes
+through checked transformations, refusing unreviewed sources/additional patches.
+Only line-ending checkout normalization is permitted for its PHP comparison.
+Its first legacy update may create a missing license destination but will not
+overwrite differing existing terms. See [the complete proof](PHP_XLSXWriter.md#reviewed-transformations-and-installed-file-protection).
+
+The untouched-npm proof method belongs to the Mermaid recipe, not to all bundles.
 An ECharts custom build is generated for a selected module set and cannot simply
 be compared with a prebuilt npm file. A future ECharts recipe must implement an
 appropriate installed-build proof and publication verification; neither is
@@ -239,10 +265,12 @@ successful archive check or original-file count never means legal approval.
 
 ## GitHub setup and manual invocation
 
-Repository: `axenox/dependencyupdater`; workflow:
+Current test repository: `sergejriel/DependencyUpdater`, default branch `master`;
+workflow:
 `.github/workflows/update-bundled-dependency.yml`, **Update bundled dependency**.
 Publish the updater on its default branch and the adjusted target inventory on
-the configured `1.x-dev` before invocation. No workflow dispatch, PR, secret or
+the configured `feature/Devman-3415-dependency-updater` before invocation.
+The user reports the environment is configured; no workflow dispatch, PR, secret or
 environment has been provisioned by this local implementation.
 
 Create environment `fork-publishing` in the updater repository, with secret
@@ -253,7 +281,7 @@ Contents write, Pull requests write and Metadata read. A normal workflow
 implemented. Prefer required reviewers and a default-branch environment restriction.
 
 The workflow is manual-only and rejects non-default-branch execution. Select
-app `exface.Core` and package `npm-asset/mermaid`; inputs cannot override the
+app `exface.Core` and package `mk-j/php_xlsxwriter`; inputs cannot override the
 repository or branch. Per-app/package concurrency prevents overlapping runs.
 Generation and publication use different workers; the first has no target-write
 secret. The publisher reconstructs the candidate before API writes. Candidate
