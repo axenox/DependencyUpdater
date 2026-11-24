@@ -4,7 +4,7 @@
     {
       "id": "exface.Core",
       "repository": "sergejriel/Core",
-      "baseBranch": "1.x-dev",
+      "baseBranch": "feature/Devman-3415-dependency-updater",
       "inventory": "includes.json",
       "vendorPath": "exface/core",
       "enabled": true
